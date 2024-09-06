@@ -97,7 +97,7 @@ async function generateExcel(topic: string, questions: { text: string, type: str
   return excelBuffer
 }
 
-function getColumnWidths(data: any[][]): { wch: number }[] {
+function getColumnWidths(data: string[][]): { wch: number }[] {
   return data[0].map((_, colIndex) => {
     const maxLength = data.reduce((max, row) => Math.max(max, (row[colIndex] || '').toString().length), 0)
     return { wch: maxLength + 2 } // Adding some padding
