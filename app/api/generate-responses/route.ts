@@ -66,7 +66,7 @@ async function generateExcel(topic: string, questions: { text: string, type: str
   // Questions sheet
   const questionsData = [
     ['Question Number', 'Question Text', 'Question Type', 'Options'],
-    ...questions.map((q, i) => [i + 1, q.text, q.type, q.options.join(', ')])
+    ...questions.map((q, i) => [(i + 1).toString(), q.text, q.type, q.options.join(', ')])
   ]
   const questionsWs = XLSX.utils.aoa_to_sheet(questionsData)
   questionsWs['!cols'] = getColumnWidths(questionsData)
@@ -75,7 +75,7 @@ async function generateExcel(topic: string, questions: { text: string, type: str
   // Responses sheet
   const responsesData = [
     ['Question Number', ...Array(responses[0].length).fill(0).map((_, i) => `Response ${i + 1}`)],
-    ...responses.map((r, i) => [i + 1, ...r])
+    ...responses.map((r, i) => [(i + 1).toString(), ...r])
   ]
   const responsesWs = XLSX.utils.aoa_to_sheet(responsesData)
   responsesWs['!cols'] = getColumnWidths(responsesData)
@@ -85,7 +85,7 @@ async function generateExcel(topic: string, questions: { text: string, type: str
   const spssData = [
     ['Respondent', ...questions.map((q, i) => `Q${i + 1}`)],
     ...Array(responses[0].length).fill(0).map((_, i) => [
-      i + 1,
+      (i + 1).toString(),
       ...responses.map(r => r[i])
     ])
   ]
