@@ -81,6 +81,18 @@ async function generateExcel(topic: string, questions: { text: string, type: str
   responsesWs['!cols'] = getColumnWidths(responsesData)
   XLSX.utils.book_append_sheet(workbook, responsesWs, 'Responses')
 
+  // SPSS sheet
+  const spssData = [
+    ['Respondent', ...questions.map((q, i) => `Q${i + 1}`)],
+    ...Array(responses[0].length).fill(0).map((_, i) => [
+      i + 1,
+      ...responses.map(r => r[i])
+    ])
+  ]
+  const spssWs = XLSX.utils.aoa_to_sheet(spssData)
+  spssWs['!cols'] = getColumnWidths(spssData)
+  XLSX.utils.book_append_sheet(workbook, spssWs, 'SPSS')
+
   const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })
   return excelBuffer
 }
