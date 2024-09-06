@@ -55,7 +55,7 @@ export default function QuestionList({ questions, onRemoveQuestion }: QuestionLi
   )
 }
 
-function SampleNextArrow(props: any) {
+function SampleNextArrow(props: { className?: string; style?: React.CSSProperties; onClick?: () => void }) {
   const { className, style, onClick } = props
   return (
     <div
@@ -66,7 +66,7 @@ function SampleNextArrow(props: any) {
   )
 }
 
-function SamplePrevArrow(props: any) {
+function SamplePrevArrow(props: { className?: string; style?: React.CSSProperties; onClick?: () => void }) {
   const { className, style, onClick } = props
   return (
     <div

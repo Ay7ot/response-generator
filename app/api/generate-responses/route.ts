@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-function generateResponses(questions: any[], numResponses: number): string[][] {
+function generateResponses(questions: { text: string, type: string, options: string[] }[], numResponses: number): string[][] {
   // TODO: Implement actual response generation logic
   // This is a placeholder that generates random responses
   return questions.map(q => 
@@ -40,7 +40,7 @@ function generateResponses(questions: any[], numResponses: number): string[][] {
   )
 }
 
-async function generateExcel(topic: string, questions: any[], responses: string[][]): Promise<Buffer> {
+async function generateExcel(topic: string, questions: { text: string, type: string, options: string[] }[], responses: string[][]): Promise<Buffer> {
   const workbook = XLSX.utils.book_new()
   
   // Metadata sheet
