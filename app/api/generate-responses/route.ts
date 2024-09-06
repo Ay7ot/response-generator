@@ -69,6 +69,7 @@ async function generateExcel(topic: string, questions: { text: string, type: str
     ...questions.map((q, i) => [i + 1, q.text, q.type, q.options.join(', ')])
   ]
   const questionsWs = XLSX.utils.aoa_to_sheet(questionsData)
+  questionsWs['!cols'] = getColumnWidths(questionsData)
   XLSX.utils.book_append_sheet(workbook, questionsWs, 'Questions')
 
   // Responses sheet
@@ -77,8 +78,16 @@ async function generateExcel(topic: string, questions: { text: string, type: str
     ...responses.map((r, i) => [i + 1, ...r])
   ]
   const responsesWs = XLSX.utils.aoa_to_sheet(responsesData)
+  responsesWs['!cols'] = getColumnWidths(responsesData)
   XLSX.utils.book_append_sheet(workbook, responsesWs, 'Responses')
 
   const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })
   return excelBuffer
+}
+
+function getColumnWidths(data: any[][]): { wch: number }[] {
+  return data[0].map((_, colIndex) => {
+    const maxLength = data.reduce((max, row) => Math.max(max, (row[colIndex] || '').toString().length), 0)
+    return { wch: maxLength + 2 } // Adding some padding
+  })
 }
