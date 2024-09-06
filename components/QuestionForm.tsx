@@ -54,7 +54,7 @@ export default function QuestionForm({ onAddQuestion }: QuestionFormProps) {
           value={questionText}
           onChange={(e) => setQuestionText(e.target.value)}
           required
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:outline-none p-4"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:outline-none p-4 text-black"
           placeholder="Enter your question here"
         />
       </div>
@@ -63,7 +63,7 @@ export default function QuestionForm({ onAddQuestion }: QuestionFormProps) {
         <select
           value={questionType}
           onChange={(e) => setQuestionType(e.target.value as 'single' | 'multiple')}
-          className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none sm:text-sm rounded-md p-4"
+          className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none sm:text-sm rounded-md p-4 text-black"
         >
           <option value="single">Single Choice</option>
           <option value="multiple">Multiple Choice</option>
@@ -78,7 +78,7 @@ export default function QuestionForm({ onAddQuestion }: QuestionFormProps) {
                 type="text"
                 value={option}
                 onChange={(e) => handleOptionChange(index, e.target.value)}
-                className="flex-grow rounded-md border-gray-300 shadow-sm focus:outline-none p-4"
+                className="flex-grow rounded-md border-gray-300 shadow-sm focus:outline-none p-4 text-black"
                 placeholder={`Option ${index + 1}`}
               />
               {options.length > 2 && (

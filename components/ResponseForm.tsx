@@ -25,7 +25,7 @@ export default function ResponseForm({ onSubmit }: ResponseFormProps) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="border p-2 w-full outline-none"
+          className="border p-2 w-full outline-none text-black"
         />
       </div>
       <div>
@@ -37,7 +37,7 @@ export default function ResponseForm({ onSubmit }: ResponseFormProps) {
           value={numResponses}
           onChange={(e) => setNumResponses(parseInt(e.target.value))}
           required
-          className="border p-2 w-full outline-none"
+          className="border p-2 w-full outline-none text-black"
         />
       </div>
       <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">

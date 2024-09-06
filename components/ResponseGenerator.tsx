@@ -88,7 +88,7 @@ export default function ResponseGenerator() {
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
             required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:outline-none p-4"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:outline-none p-4 text-black"
           />
         </div>
         <QuestionForm onAddQuestion={addQuestion} />
@@ -102,7 +102,7 @@ export default function ResponseGenerator() {
             value={numResponses}
             onChange={(e) => setNumResponses(Math.max(1, parseInt(e.target.value)))}
             required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:outline-none p-4"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:outline-none p-4 text-black"
           />
         </div>
         <button 
