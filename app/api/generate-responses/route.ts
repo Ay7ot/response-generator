@@ -33,11 +33,23 @@ export async function POST(req: NextRequest) {
 }
 
 function generateResponses(questions: { text: string, type: string, options: string[] }[], numResponses: number): string[][] {
-  // TODO: Implement actual response generation logic
-  // This is a placeholder that generates random responses
-  return questions.map(q => 
-    Array(numResponses).fill(0).map(() => q.options[Math.floor(Math.random() * q.options.length)])
-  )
+  // This function generates random responses for each question
+  return questions.map(q => {
+    if (q.type === 'multiple') {
+      // For multiple-choice questions, generate multiple answers
+      return Array(numResponses).fill(0).map(() => {
+        const numOptions = Math.floor(Math.random() * q.options.length) + 1
+        const selectedOptions = new Set<string>()
+        while (selectedOptions.size < numOptions) {
+          selectedOptions.add(q.options[Math.floor(Math.random() * q.options.length)])
+        }
+        return Array.from(selectedOptions).join(', ')
+      })
+    } else {
+      // For single-choice questions, generate one answer
+      return Array(numResponses).fill(0).map(() => q.options[Math.floor(Math.random() * q.options.length)])
+    }
+  })
 }
 
 async function generateExcel(topic: string, questions: { text: string, type: string, options: string[] }[], responses: string[][]): Promise<Buffer> {
