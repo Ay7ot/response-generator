@@ -83,7 +83,7 @@ async function generateExcel(topic: string, questions: { text: string, type: str
 
   // SPSS sheet
   const spssData = [
-    ['Respondent', ...questions.map((q, i) => `Q${i + 1}`)],
+    ['Respondent', ...questions.map(q => q.text)],
     ...Array(responses[0].length).fill(0).map((_, i) => [
       (i + 1).toString(),
       ...responses.map(r => r[i])
