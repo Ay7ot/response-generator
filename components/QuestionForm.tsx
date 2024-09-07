@@ -1,16 +1,28 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Question } from './ResponseGenerator'
 
 interface QuestionFormProps {
   onAddQuestion: (question: Question) => void
+  onUpdateQuestion: (index: number, question: Question) => void
+  editingIndex: number | null
+  questions: Question[]
 }
 
-export default function QuestionForm({ onAddQuestion }: QuestionFormProps) {
+export default function QuestionForm({ onAddQuestion, onUpdateQuestion, editingIndex, questions }: QuestionFormProps) {
   const [questionText, setQuestionText] = useState('')
   const [questionType, setQuestionType] = useState<'single' | 'multiple'>('single')
   const [options, setOptions] = useState(['', '', '', ''])  // Default to 4 options
+
+  useEffect(() => {
+    if (editingIndex !== null) {
+      const question = questions[editingIndex]
+      setQuestionText(question.text)
+      setQuestionType(question.type)
+      setOptions([...question.options, '', '', '', ''].slice(0, 4))  // Ensure at least 4 options
+    }
+  }, [editingIndex, questions])
 
   const handleAddOption = () => {
     setOptions([...options, ''])
@@ -31,11 +43,16 @@ export default function QuestionForm({ onAddQuestion }: QuestionFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (questionText.trim() && options.filter(o => o.trim()).length >= 2) {
-      onAddQuestion({
+      const newQuestion = {
         text: questionText,
         type: questionType,
         options: options.filter(o => o.trim())
-      })
+      }
+      if (editingIndex !== null) {
+        onUpdateQuestion(editingIndex, newQuestion)
+      } else {
+        onAddQuestion(newQuestion)
+      }
       setQuestionText('')
       setQuestionType('single')
       setOptions(['', '', '', ''])  // Reset to 4 empty options
@@ -110,7 +127,7 @@ export default function QuestionForm({ onAddQuestion }: QuestionFormProps) {
         type="submit" 
         className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
       >
-        Add Question
+        {editingIndex !== null ? 'Update Question' : 'Add Question'}
       </button>
     </form>
   )

@@ -6,9 +6,10 @@ import 'slick-carousel/slick/slick-theme.css'
 interface QuestionListProps {
   questions: Question[]
   onRemoveQuestion: (index: number) => void
+  onEditQuestion: (index: number) => void
 }
 
-export default function QuestionList({ questions, onRemoveQuestion }: QuestionListProps) {
+export default function QuestionList({ questions, onRemoveQuestion, onEditQuestion }: QuestionListProps) {
   const settings = {
     dots: false,
     infinite: false,
@@ -40,7 +41,13 @@ export default function QuestionList({ questions, onRemoveQuestion }: QuestionLi
                 ))}
               </dl>
             </div>
-            <div className="px-4 py-3 bg-gray-50 text-right sm:px-6">
+            <div className="px-4 py-3 bg-gray-50 text-right sm:px-6 space-x-2">
+              <button
+                onClick={() => onEditQuestion(index)}
+                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none"
+              >
+                Edit
+              </button>
               <button
                 onClick={() => onRemoveQuestion(index)}
                 className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none"

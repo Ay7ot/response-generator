@@ -9,13 +9,25 @@ export default function ResponseGenerator() {
   const [questions, setQuestions] = useState<Question[]>([])
   const [numResponses, setNumResponses] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
+  const [editingIndex, setEditingIndex] = useState<number | null>(null)
 
   const addQuestion = (question: Question) => {
     setQuestions([...questions, question])
   }
 
+  const updateQuestion = (index: number, updatedQuestion: Question) => {
+    const newQuestions = [...questions]
+    newQuestions[index] = updatedQuestion
+    setQuestions(newQuestions)
+    setEditingIndex(null)
+  }
+
   const removeQuestion = (index: number) => {
     setQuestions(questions.filter((_, i) => i !== index))
+  }
+
+  const handleEdit = (index: number) => {
+    setEditingIndex(index)
   }
 
   const handleSubmit = async () => {
@@ -91,8 +103,17 @@ export default function ResponseGenerator() {
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:outline-none p-4 text-black"
           />
         </div>
-        <QuestionForm onAddQuestion={addQuestion} />
-        <QuestionList questions={questions} onRemoveQuestion={removeQuestion} />
+        <QuestionForm 
+          onAddQuestion={addQuestion} 
+          onUpdateQuestion={updateQuestion} 
+          editingIndex={editingIndex} 
+          questions={questions} 
+        />
+        <QuestionList 
+          questions={questions} 
+          onRemoveQuestion={removeQuestion} 
+          onEditQuestion={handleEdit} 
+        />
         <div>
           <label htmlFor="num-responses" className="block text-sm font-medium text-gray-700">Number of Responses</label>
           <input
