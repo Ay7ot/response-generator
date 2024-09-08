@@ -120,11 +120,12 @@ export default function QuestionForm({ onAddQuestion, onUpdateQuestion, editingI
                 placeholder={`Option ${index + 1}`}
               />
               <input
-                type="text"
+                type="number"
                 value={option.percentage}
                 onChange={(e) => handlePercentageChange(index, e.target.value)}
                 className="w-20 rounded-md border-gray-300 shadow-sm focus:outline-none p-2 text-black"
                 placeholder="Percentage"
+                min="0"
                 max="100"
               />
               {options.length > 2 && (

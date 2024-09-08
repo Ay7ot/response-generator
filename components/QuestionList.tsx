@@ -36,7 +36,7 @@ export default function QuestionList({ questions, onRemoveQuestion, onEditQuesti
                 {question.options.map((option, optionIndex) => (
                   <div key={optionIndex} className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                     <dt className="text-sm font-medium text-gray-500">Option {optionIndex + 1}</dt>
-                    <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{option}</dd>
+                    <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{option.text}</dd> 
                   </div>
                 ))}
               </dl>
