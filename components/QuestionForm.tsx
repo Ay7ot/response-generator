@@ -13,24 +13,30 @@ interface QuestionFormProps {
 export default function QuestionForm({ onAddQuestion, onUpdateQuestion, editingIndex, questions }: QuestionFormProps) {
   const [questionText, setQuestionText] = useState('')
   const [questionType, setQuestionType] = useState<'single' | 'multiple'>('single')
-  const [options, setOptions] = useState(['', '', '', ''])  // Default to 4 options
+  const [options, setOptions] = useState([{ text: '', percentage: 0 }, { text: '', percentage: 0 }, { text: '', percentage: 0 }, { text: '', percentage: 0 }])  // Default to 4 options
 
   useEffect(() => {
     if (editingIndex !== null) {
       const question = questions[editingIndex]
       setQuestionText(question.text)
       setQuestionType(question.type)
-      setOptions([...question.options, '', '', '', ''].slice(0, 4))  // Ensure at least 4 options
+      setOptions(question.options.map(option => ({ text: option.text, percentage: option.percentage })))  // Load existing options
     }
   }, [editingIndex, questions])
 
   const handleAddOption = () => {
-    setOptions([...options, ''])
+    setOptions([...options, { text: '', percentage: 0 }])
   }
 
   const handleOptionChange = (index: number, value: string) => {
     const newOptions = [...options]
-    newOptions[index] = value
+    newOptions[index].text = value
+    setOptions(newOptions)
+  }
+
+  const handlePercentageChange = (index: number, value: string) => {
+    const newOptions = [...options]
+    newOptions[index].percentage = parseFloat(value) || 0
     setOptions(newOptions)
   }
 
@@ -42,11 +48,26 @@ export default function QuestionForm({ onAddQuestion, onUpdateQuestion, editingI
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (questionText.trim() && options.filter(o => o.trim()).length >= 2) {
+    const totalPercentage = options.reduce((sum, option) => sum + option.percentage, 0)
+
+    if (questionText.trim() && options.filter(o => o.text.trim()).length >= 2) {
+      const newOptions = options.map(option => ({ text: option.text, percentage: option.percentage }));
+
+      // If total percentage is less than 100, distribute the remaining percentage randomly
+      if (totalPercentage < 100) {
+        const remainingPercentage = 100 - totalPercentage;
+        const unspecifiedOptions = newOptions.filter(option => option.percentage === 0);
+        const randomDistribution = remainingPercentage / unspecifiedOptions.length;
+
+        unspecifiedOptions.forEach(option => {
+          option.percentage = randomDistribution;
+        });
+      }
+
       const newQuestion = {
         text: questionText,
         type: questionType,
-        options: options.filter(o => o.trim())
+        options: newOptions.filter(o => o.text.trim()) // Filter out empty options
       }
       if (editingIndex !== null) {
         onUpdateQuestion(editingIndex, newQuestion)
@@ -55,7 +76,7 @@ export default function QuestionForm({ onAddQuestion, onUpdateQuestion, editingI
       }
       setQuestionText('')
       setQuestionType('single')
-      setOptions(['', '', '', ''])  // Reset to 4 empty options
+      setOptions([{ text: '', percentage: 0 }, { text: '', percentage: 0 }, { text: '', percentage: 0 }, { text: '', percentage: 0 }])  // Reset to 4 empty options
     } else {
       alert('Please enter a question and at least two options')
     }
@@ -93,10 +114,18 @@ export default function QuestionForm({ onAddQuestion, onUpdateQuestion, editingI
             <div key={index} className="flex items-center space-x-2">
               <input
                 type="text"
-                value={option}
+                value={option.text}
                 onChange={(e) => handleOptionChange(index, e.target.value)}
                 className="flex-grow rounded-md border-gray-300 shadow-sm focus:outline-none p-4 text-black"
                 placeholder={`Option ${index + 1}`}
+              />
+              <input
+                type="text"
+                value={option.percentage}
+                onChange={(e) => handlePercentageChange(index, e.target.value)}
+                className="w-20 rounded-md border-gray-300 shadow-sm focus:outline-none p-2 text-black"
+                placeholder="Percentage"
+                max="100"
               />
               {options.length > 2 && (
                 <button
@@ -117,14 +146,11 @@ export default function QuestionForm({ onAddQuestion, onUpdateQuestion, editingI
           onClick={handleAddOption}
           className="mt-2 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-          </svg>
           Add Option
         </button>
       </div>
-      <button 
-        type="submit" 
+      <button
+        type="submit"
         className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
       >
         {editingIndex !== null ? 'Update Question' : 'Add Question'}

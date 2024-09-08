@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { toast, ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 import QuestionForm from './QuestionForm'
 import QuestionList from './QuestionList'
 
@@ -32,17 +34,17 @@ export default function ResponseGenerator() {
 
   const handleSubmit = async () => {
     if (!topic.trim()) {
-      alert('Please enter a research topic')
+      toast.error('Please enter a research topic')
       return
     }
 
     if (questions.length === 0) {
-      alert('Please add at least one question')
+      toast.error('Please add at least one question')
       return
     }
 
     if (numResponses < 1) {
-      alert('Please enter a valid number of responses')
+      toast.error('Please enter a valid number of responses')
       return
     }
 
@@ -72,18 +74,18 @@ export default function ResponseGenerator() {
           document.body.appendChild(a)
           a.click()
           window.URL.revokeObjectURL(url)
-          alert('Responses generated and downloaded successfully')
+          toast.success('Responses generated and downloaded successfully')
         } else {
           const result = await response.json()
-          alert(result.message || 'An unexpected error occurred')
+          toast.error(result.message || 'An unexpected error occurred')
         }
       } else {
         const errorText = await response.text()
-        alert(`Failed to generate responses: ${errorText}`)
+        toast.error(`Failed to generate responses: ${errorText}`)
       }
     } catch (error) {
       console.error('Error:', error)
-      alert('An error occurred while generating responses')
+      toast.error('An error occurred while generating responses')
     } finally {
       setIsLoading(false)
     }
@@ -91,6 +93,7 @@ export default function ResponseGenerator() {
 
   return (
     <div className="w-full bg-white shadow-md rounded-lg overflow-hidden max-w-4xl mx-auto">
+      <ToastContainer />
       <div className="p-4 sm:p-6 lg:p-8 space-y-6">
         <div>
           <label htmlFor="topic" className="block text-sm font-medium text-gray-700">Research Topic</label>
@@ -103,16 +106,16 @@ export default function ResponseGenerator() {
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:outline-none p-4 text-black"
           />
         </div>
-        <QuestionForm 
-          onAddQuestion={addQuestion} 
-          onUpdateQuestion={updateQuestion} 
-          editingIndex={editingIndex} 
-          questions={questions} 
+        <QuestionForm
+          onAddQuestion={addQuestion}
+          onUpdateQuestion={updateQuestion}
+          editingIndex={editingIndex}
+          questions={questions}
         />
-        <QuestionList 
-          questions={questions} 
-          onRemoveQuestion={removeQuestion} 
-          onEditQuestion={handleEdit} 
+        <QuestionList
+          questions={questions}
+          onRemoveQuestion={removeQuestion}
+          onEditQuestion={handleEdit}
         />
         <div>
           <label htmlFor="num-responses" className="block text-sm font-medium text-gray-700">Number of Responses</label>
@@ -126,7 +129,7 @@ export default function ResponseGenerator() {
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:outline-none p-4 text-black"
           />
         </div>
-        <button 
+        <button
           onClick={handleSubmit}
           className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
           disabled={isLoading}
@@ -141,5 +144,5 @@ export default function ResponseGenerator() {
 export interface Question {
   text: string
   type: 'single' | 'multiple'
-  options: string[]
+  options: { text: string; percentage: number }[];
 }

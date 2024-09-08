@@ -32,27 +32,46 @@ export async function POST(req: NextRequest) {
   }
 }
 
-function generateResponses(questions: { text: string, type: string, options: string[] }[], numResponses: number): string[][] {
-  // This function generates random responses for each question
+function generateResponses(questions: { text: string, type: string, options: { text: string; percentage: number }[] }[], numResponses: number): string[][] {
   return questions.map(q => {
     if (q.type === 'multiple') {
-      // For multiple-choice questions, generate multiple answers
       return Array(numResponses).fill(0).map(() => {
-        const numOptions = Math.floor(Math.random() * q.options.length) + 1
         const selectedOptions = new Set<string>()
-        while (selectedOptions.size < numOptions) {
-          selectedOptions.add(q.options[Math.floor(Math.random() * q.options.length)])
+        let totalPercentage = 0;
+
+        // Generate responses based on specified percentages
+        while (selectedOptions.size < Math.floor(Math.random() * q.options.length) + 1) {
+          const randomValue = Math.random() * 100;
+          totalPercentage = 0;
+
+          for (const option of q.options) {
+            totalPercentage += option.percentage;
+            if (randomValue <= totalPercentage) {
+              selectedOptions.add(option.text);
+              break;
+            }
+          }
         }
         return Array.from(selectedOptions).join(', ')
       })
     } else {
-      // For single-choice questions, generate one answer
-      return Array(numResponses).fill(0).map(() => q.options[Math.floor(Math.random() * q.options.length)])
+      return Array(numResponses).fill(0).map(() => {
+        const randomValue = Math.random() * 100;
+        let totalPercentage = 0;
+
+        for (const option of q.options) {
+          totalPercentage += option.percentage;
+          if (randomValue <= totalPercentage) {
+            return option.text;
+          }
+        }
+        return ''; // Fallback in case no option is selected
+      })
     }
   })
 }
 
-async function generateExcel(topic: string, questions: { text: string, type: string, options: string[] }[], responses: string[][]): Promise<Buffer> {
+async function generateExcel(topic: string, questions: { text: string, type: string, options: { text: string; percentage: number }[] }[], responses: string[][]): Promise<Buffer> {
   const workbook = XLSX.utils.book_new()
   
   // Metadata sheet
@@ -65,8 +84,14 @@ async function generateExcel(topic: string, questions: { text: string, type: str
 
   // Questions sheet
   const questionsData = [
-    ['Question Number', 'Question Text', 'Question Type', 'Options'],
-    ...questions.map((q, i) => [(i + 1).toString(), q.text, q.type, q.options.join(', ')])
+    ['Question Number', 'Question Text', 'Question Type', 'Options', 'Percentages'],
+    ...questions.map((q, i) => [
+      (i + 1).toString(),
+      q.text,
+      q.type,
+      q.options.map(o => o.text).join(', '),
+      q.options.map(o => o.percentage).join(', ')
+    ])
   ]
   const questionsWs = XLSX.utils.aoa_to_sheet(questionsData)
   questionsWs['!cols'] = getColumnWidths(questionsData)
