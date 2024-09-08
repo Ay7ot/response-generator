@@ -47,11 +47,11 @@ export default function QuestionForm({ onAddQuestion, onUpdateQuestion, editingI
   }
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (questionText.trim() && options.filter(o => o.text.trim()).length >= 2) {
       const newOptions = options.map(option => ({ text: option.text, percentage: option.percentage }));
 
-      // If it's a single choice question, ensure total percentage does not exceed 100
+      // If it's a single choice question, ensure total percentage equals 100
       if (questionType === 'single') {
         const totalPercentage = newOptions.reduce((sum, option) => sum + option.percentage, 0);
         const emptyOptions = newOptions.filter(option => option.percentage === 0);
@@ -64,10 +64,23 @@ export default function QuestionForm({ onAddQuestion, onUpdateQuestion, editingI
         // Randomly distribute remaining percentage among empty options
         const remainingPercentage = 100 - totalPercentage;
         if (remainingPercentage > 0 && emptyOptions.length > 0) {
-          const randomDistribution = remainingPercentage / emptyOptions.length;
+          let distributedPercentage = 0;
+
+          // Randomly assign a portion of the remaining percentage to each empty option
           emptyOptions.forEach(option => {
-            option.percentage = Math.random() * randomDistribution; // Randomly assign a portion of the remaining percentage
+            const randomValue = Math.random() * (remainingPercentage - distributedPercentage);
+            option.percentage = randomValue;
+            distributedPercentage += randomValue;
           });
+
+          // Ensure the total equals 100%
+          if (distributedPercentage < remainingPercentage) {
+            const lastEmptyOption = emptyOptions[emptyOptions.length - 1];
+            lastEmptyOption.percentage += (remainingPercentage - distributedPercentage);
+          }
+        } else if (totalPercentage < 100) {
+          alert('Total percentage must equal 100% for single choice questions.');
+          return;
         }
       }
 
