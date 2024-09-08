@@ -48,20 +48,27 @@ export default function QuestionForm({ onAddQuestion, onUpdateQuestion, editingI
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const totalPercentage = options.reduce((sum, option) => sum + option.percentage, 0)
-
     if (questionText.trim() && options.filter(o => o.text.trim()).length >= 2) {
       const newOptions = options.map(option => ({ text: option.text, percentage: option.percentage }));
 
-      // If total percentage is less than 100, distribute the remaining percentage randomly
-      if (totalPercentage < 100) {
-        const remainingPercentage = 100 - totalPercentage;
-        const unspecifiedOptions = newOptions.filter(option => option.percentage === 0);
-        const randomDistribution = remainingPercentage / unspecifiedOptions.length;
+      // If it's a single choice question, ensure total percentage does not exceed 100
+      if (questionType === 'single') {
+        const totalPercentage = newOptions.reduce((sum, option) => sum + option.percentage, 0);
+        const emptyOptions = newOptions.filter(option => option.percentage === 0);
+        
+        if (totalPercentage > 100) {
+          alert('Total percentage cannot exceed 100% for single choice questions.');
+          return;
+        }
 
-        unspecifiedOptions.forEach(option => {
-          option.percentage = randomDistribution;
-        });
+        // Randomly distribute remaining percentage among empty options
+        const remainingPercentage = 100 - totalPercentage;
+        if (remainingPercentage > 0 && emptyOptions.length > 0) {
+          const randomDistribution = remainingPercentage / emptyOptions.length;
+          emptyOptions.forEach(option => {
+            option.percentage = Math.random() * randomDistribution; // Randomly assign a portion of the remaining percentage
+          });
+        }
       }
 
       const newQuestion = {
