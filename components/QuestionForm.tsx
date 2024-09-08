@@ -13,7 +13,7 @@ interface QuestionFormProps {
 export default function QuestionForm({ onAddQuestion, onUpdateQuestion, editingIndex, questions }: QuestionFormProps) {
   const [questionText, setQuestionText] = useState('')
   const [questionType, setQuestionType] = useState<'single' | 'multiple'>('single')
-  const [options, setOptions] = useState([{ text: '', percentage: '0' }, { text: '', percentage: '0' }, { text: '', percentage: '0' }, { text: '', percentage: '0' }])  // Default to 4 options
+  const [options, setOptions] = useState([{ text: '', percentage: 0 }, { text: '', percentage: 0 }, { text: '', percentage: 0 }, { text: '', percentage: 0 }])  // Default to 4 options
 
   useEffect(() => {
     if (editingIndex !== null) {
@@ -25,7 +25,7 @@ export default function QuestionForm({ onAddQuestion, onUpdateQuestion, editingI
   }, [editingIndex, questions])
 
   const handleAddOption = () => {
-    setOptions([...options, { text: '', percentage: '0' }])
+    setOptions([...options, { text: '', percentage: 0 }])
   }
 
   const handleOptionChange = (index: number, value: string) => {
@@ -36,7 +36,7 @@ export default function QuestionForm({ onAddQuestion, onUpdateQuestion, editingI
 
   const handlePercentageChange = (index: number, value: string) => {
     const newOptions = [...options]
-    newOptions[index].percentage = value;  // Changed from parseFloat(value) to just value
+    newOptions[index].percentage = parseFloat(value) || 0;  // Convert string input back to number
     setOptions(newOptions)
   }
 
@@ -48,7 +48,7 @@ export default function QuestionForm({ onAddQuestion, onUpdateQuestion, editingI
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const totalPercentage = options.reduce((sum, option) => sum + parseFloat(option.percentage), 0)
+    const totalPercentage = options.reduce((sum, option) => sum + option.percentage, 0)
 
     if (questionText.trim() && options.filter(o => o.text.trim()).length >= 2) {
       const newOptions = options.map(option => ({ text: option.text, percentage: option.percentage }));
@@ -76,7 +76,7 @@ export default function QuestionForm({ onAddQuestion, onUpdateQuestion, editingI
       }
       setQuestionText('')
       setQuestionType('single')
-      setOptions([{ text: '', percentage: '0' }, { text: '', percentage: '0' }, { text: '', percentage: '0' }, { text: '', percentage: '0' }])  // Reset to 4 empty options
+      setOptions([{ text: '', percentage: 0 }, { text: '', percentage: 0 }, { text: '', percentage: 0 }, { text: '', percentage: 0 }])  // Reset to 4 empty options
     } else {
       alert('Please enter a question and at least two options')
     }
@@ -127,6 +127,7 @@ export default function QuestionForm({ onAddQuestion, onUpdateQuestion, editingI
                 placeholder="Percentage"
                 min="0"
                 max="100"
+                step="0.01"  // Allow decimal inputs
               />
               {options.length > 2 && (
                 <button
