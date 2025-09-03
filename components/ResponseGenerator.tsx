@@ -1,10 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { toast, ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import QuestionForm from './QuestionForm'
 import QuestionList from './QuestionList'
+import AuthModal from './AuthModal'
+import ProjectManager from './ProjectManager'
+import FirebaseDebug from './FirebaseDebug'
+import { useAuth } from '@/hooks/useFirebase'
+import { db } from '@/lib/firebase'
+import { collection, addDoc, updateDoc, doc, getDoc } from 'firebase/firestore'
 
 export default function ResponseGenerator() {
   const [topic, setTopic] = useState('')
@@ -12,6 +18,52 @@ export default function ResponseGenerator() {
   const [numResponses, setNumResponses] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
+  const [focusedSection, setFocusedSection] = useState<string | null>(null)
+  const [generatedResponses, setGeneratedResponses] = useState<string[][]>([])
+  const [saveToFirebase, setSaveToFirebase] = useState(false)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [showProjectManager, setShowProjectManager] = useState(false)
+  const [currentProjectId, setCurrentProjectId] = useState<string | undefined>()
+  const topicInputRef = useRef<HTMLInputElement>(null)
+
+  const { user, loading: authLoading } = useAuth()
+
+  // Apple-style focus management
+  useEffect(() => {
+    if (topicInputRef.current && topic === '') {
+      topicInputRef.current.focus()
+    }
+  }, [])
+
+  // Listen for project management events
+  useEffect(() => {
+    const handleOpenProjectManager = () => {
+      if (user) {
+        setShowProjectManager(true)
+      } else {
+        toast.info('Please sign in to manage your projects', {
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: true,
+          closeOnClick: true,
+          pauseOnHover: true
+        })
+        setShowAuthModal(true)
+      }
+    }
+
+    const handleStartNewProject = () => {
+      startNewProject()
+    }
+
+    window.addEventListener('openProjectManager', handleOpenProjectManager)
+    window.addEventListener('startNewProject', handleStartNewProject)
+
+    return () => {
+      window.removeEventListener('openProjectManager', handleOpenProjectManager)
+      window.removeEventListener('startNewProject', handleStartNewProject)
+    }
+  }, [user])
 
   const addQuestion = (question: Question) => {
     setQuestions([...questions, question])
@@ -32,19 +84,139 @@ export default function ResponseGenerator() {
     setEditingIndex(index)
   }
 
+  const saveToFirebaseDB = async (saveType: 'draft' | 'complete' = 'complete') => {
+    try {
+      if (!user?.uid) {
+        toast.error('Please sign in to save to cloud')
+        return
+      }
+
+      const nowIso = new Date().toISOString()
+      const researchData = {
+        topic,
+        questions,
+        responses: saveType === 'complete' ? generatedResponses : [],
+        userId: user.uid,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+        totalQuestions: questions.length,
+        totalResponses: saveType === 'complete' ? (generatedResponses[0]?.length || 0) : 0,
+        status: saveType === 'complete' ? 'completed' : 'draft' as const,
+        saveType
+      }
+
+      if (currentProjectId) {
+        // Update existing
+        await updateDoc(doc(db, 'research_projects', currentProjectId), {
+          ...researchData,
+          createdAt: undefined, // keep original if exists
+          updatedAt: nowIso
+        })
+      } else {
+        const ref = await addDoc(collection(db, 'research_projects'), researchData)
+        setCurrentProjectId(ref.id)
+      }
+
+      toast.success(saveType === 'draft' ? 'Draft saved to cloud!' : 'Research data saved to cloud!', {
+        position: 'top-center',
+        autoClose: 3000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: true,
+      })
+    } catch (error) {
+      console.error('Error saving to Firebase:', error)
+      toast.error('Failed to save to cloud')
+    }
+  }
+
+  const loadProject = (project: any) => {
+    setTopic(project.topic || '')
+    setQuestions(project.questions || [])
+    setCurrentProjectId(project.id)
+    setGeneratedResponses(project.responses || [])
+
+    toast.success('Project loaded successfully!', {
+      position: "top-center",
+      autoClose: 2000,
+      hideProgressBar: true,
+      closeOnClick: true,
+      pauseOnHover: true
+    })
+  }
+
+  const startNewProject = () => {
+    setTopic('')
+    setQuestions([])
+    setCurrentProjectId(undefined)
+    setGeneratedResponses([])
+    setEditingIndex(null)
+
+    toast.success('Started new project!', {
+      position: "top-center",
+      autoClose: 2000,
+      hideProgressBar: true,
+      closeOnClick: true,
+      pauseOnHover: true
+    })
+  }
+
   const handleSubmit = async () => {
     if (!topic.trim()) {
-      toast.error('Please enter a research topic')
+      toast.error('Please enter a research topic', {
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: true,
+        style: {
+          backgroundColor: 'var(--color-system-red)',
+          color: 'white',
+          borderRadius: '12px',
+          fontFamily: '-apple-system, BlinkMacSystemFont, SF Pro Display, system-ui, sans-serif',
+          fontSize: '15px',
+          fontWeight: '600'
+        }
+      })
+      topicInputRef.current?.focus()
       return
     }
 
     if (questions.length === 0) {
-      toast.error('Please add at least one question')
+      toast.error('Please add at least one question', {
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: true,
+        style: {
+          backgroundColor: 'var(--color-system-red)',
+          color: 'white',
+          borderRadius: '12px',
+          fontFamily: '-apple-system, BlinkMacSystemFont, SF Pro Display, system-ui, sans-serif',
+          fontSize: '15px',
+          fontWeight: '600'
+        }
+      })
       return
     }
 
     if (numResponses < 1) {
-      toast.error('Please enter a valid number of responses')
+      toast.error('Please enter a valid number of responses', {
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: true,
+        style: {
+          backgroundColor: 'var(--color-system-red)',
+          color: 'white',
+          borderRadius: '12px',
+          fontFamily: '-apple-system, BlinkMacSystemFont, SF Pro Display, system-ui, sans-serif',
+          fontSize: '15px',
+          fontWeight: '600'
+        }
+      })
       return
     }
 
@@ -63,6 +235,11 @@ export default function ResponseGenerator() {
         const contentType = response.headers.get('Content-Type')
         if (contentType && contentType.includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')) {
           const blob = await response.blob()
+
+          // Store responses for potential Firebase save
+          // Note: We'd need to modify the API to return JSON data as well
+          setGeneratedResponses([]) // We'll set this when we modify the API
+
           const url = window.URL.createObjectURL(blob)
           const a = document.createElement('a')
           a.style.display = 'none'
@@ -74,7 +251,44 @@ export default function ResponseGenerator() {
           document.body.appendChild(a)
           a.click()
           window.URL.revokeObjectURL(url)
-          toast.success('Responses generated and downloaded successfully')
+
+          // Save to Firebase if enabled
+          if (saveToFirebase && user) {
+            await saveToFirebaseDB('complete')
+          } else if (saveToFirebase && !user) {
+            toast.info('Please sign in to save your research data to the cloud', {
+              position: "top-center",
+              autoClose: 5000,
+              hideProgressBar: true,
+              closeOnClick: true,
+              pauseOnHover: true,
+              style: {
+                backgroundColor: 'var(--color-system-orange)',
+                color: 'white',
+                borderRadius: '12px',
+                fontFamily: '-apple-system, BlinkMacSystemFont, SF Pro Display, system-ui, sans-serif',
+                fontSize: '15px',
+                fontWeight: '600'
+              }
+            })
+            setSaveToFirebase(false)
+          }
+
+          toast.success('Responses generated and downloaded successfully', {
+            position: "top-center",
+            autoClose: 4000,
+            hideProgressBar: true,
+            closeOnClick: true,
+            pauseOnHover: true,
+            style: {
+              backgroundColor: 'var(--color-system-green)',
+              color: 'white',
+              borderRadius: '12px',
+              fontFamily: '-apple-system, BlinkMacSystemFont, SF Pro Display, system-ui, sans-serif',
+              fontSize: '15px',
+              fontWeight: '600'
+            }
+          })
         } else {
           const result = await response.json()
           toast.error(result.message || 'An unexpected error occurred')
@@ -92,51 +306,253 @@ export default function ResponseGenerator() {
   }
 
   return (
-    <div className="w-full bg-white shadow-md rounded-lg overflow-hidden max-w-4xl mx-auto">
-      <ToastContainer />
-      <div className="p-4 sm:p-6 lg:p-8 space-y-6">
-        <div>
-          <label htmlFor="topic" className="block text-sm font-medium text-gray-700">Research Topic</label>
-          <input
-            id="topic"
-            type="text"
-            value={topic}
-            onChange={(e) => setTopic(e.target.value)}
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:outline-none p-4 text-black"
-          />
+    <div className="space-y-8">
+      <ToastContainer
+        position="top-center"
+        autoClose={4000}
+        hideProgressBar={false}
+        newestOnTop={true}
+        closeOnClick={true}
+        pauseOnHover={true}
+        pauseOnFocusLoss={false}
+        draggable={true}
+        theme="colored"
+        toastClassName="apple-toast"
+        bodyClassName="apple-toast-body"
+        progressClassName="apple-toast-progress"
+      />
+
+      {/* Research Topic Section */}
+      <section className="apple-card p-6 animate-fade-in">
+        <div className="space-y-4">
+          <div>
+            <label
+              htmlFor="topic"
+              className="text-headline block mb-3"
+              style={{ color: 'var(--color-label)' }}
+            >
+              Research Topic
+            </label>
+            <input
+              ref={topicInputRef}
+              id="topic"
+              type="text"
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              onFocus={() => setFocusedSection('topic')}
+              onBlur={() => setFocusedSection(null)}
+              required
+              className="apple-input w-full text-body"
+              placeholder="Enter your research topic"
+              aria-label="Research topic"
+              autoComplete="off"
+            />
+            <p className="text-footnote mt-2" style={{ color: 'var(--color-secondary-label)' }}>
+              Provide a clear, descriptive topic for your survey research
+            </p>
+          </div>
         </div>
+      </section>
+
+      {/* Question Creation Section */}
+      <section className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
         <QuestionForm
           onAddQuestion={addQuestion}
           onUpdateQuestion={updateQuestion}
           editingIndex={editingIndex}
           questions={questions}
         />
-        <QuestionList
-          questions={questions}
-          onRemoveQuestion={removeQuestion}
-          onEditQuestion={handleEdit}
-        />
-        <div>
-          <label htmlFor="num-responses" className="block text-sm font-medium text-gray-700">Number of Responses</label>
-          <input
-            id="num-responses"
-            type="number"
-            min="1"
-            value={numResponses}
-            onChange={(e) => setNumResponses(Math.max(1, parseInt(e.target.value)))}
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:outline-none p-4 text-black"
+      </section>
+
+      {/* Questions List Section */}
+      {questions.length > 0 && (
+        <section className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
+          <QuestionList
+            questions={questions}
+            onRemoveQuestion={removeQuestion}
+            onEditQuestion={handleEdit}
           />
+        </section>
+      )}
+
+      {/* Generation Settings Section */}
+      <section className="apple-card p-6 animate-fade-in" style={{ animationDelay: '0.3s' }}>
+        <div className="space-y-4">
+          <div>
+            <label
+              htmlFor="num-responses"
+              className="text-headline block mb-3"
+              style={{ color: 'var(--color-label)' }}
+            >
+              Number of Responses
+            </label>
+            <input
+              id="num-responses"
+              type="number"
+              min="1"
+              max="10000"
+              value={numResponses}
+              onChange={(e) => setNumResponses(Math.max(1, parseInt(e.target.value) || 1))}
+              onFocus={() => setFocusedSection('responses')}
+              onBlur={() => setFocusedSection(null)}
+              required
+              className="apple-input w-full text-body"
+              placeholder="1"
+              aria-label="Number of responses to generate"
+            />
+            <p className="text-footnote mt-2" style={{ color: 'var(--color-secondary-label)' }}>
+              How many synthetic responses would you like to generate?
+            </p>
+          </div>
+
+          {/* Project Actions */}
+          <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex flex-col space-y-4">
+              {/* Save Draft Button */}
+              <div>
+                <button
+                  onClick={() => {
+                    if (user) {
+                      saveToFirebaseDB('draft')
+                    } else {
+                      toast.info('Please sign in to save drafts', {
+                        position: "top-center",
+                        autoClose: 3000,
+                        hideProgressBar: true,
+                        closeOnClick: true,
+                        pauseOnHover: true
+                      })
+                      setShowAuthModal(true)
+                    }
+                  }}
+                  className="apple-button-secondary w-full text-body font-medium"
+                >
+                  💾 Save Draft
+                </button>
+                <p className="text-caption2 mt-2" style={{ color: 'var(--color-secondary-label)' }}>
+                  Save your current work without generating responses
+                </p>
+              </div>
+
+              {/* Firebase Auto-Save Option */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="text-headline" style={{ color: 'var(--color-label)' }}>
+                    Auto-save to Cloud
+                  </label>
+                  <p className="text-footnote mt-1" style={{ color: 'var(--color-secondary-label)' }}>
+                    Automatically save after generating responses
+                  </p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={saveToFirebase}
+                    onChange={(e) => setSaveToFirebase(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+
+              {saveToFirebase && (
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                  {user ? (
+                    <p className="text-caption2" style={{ color: 'rgba(60, 60, 67, 0.6)' }}>
+                      Data will be saved to your account ({user.email})
+                    </p>
+                  ) : (
+                    <div>
+                      <p className="text-caption2 mb-2" style={{ color: 'var(--color-secondary-label)' }}>
+                        Sign in to save your research data securely to the cloud
+                      </p>
+                      <button
+                        onClick={() => setShowAuthModal(true)}
+                        className="text-caption2 text-blue-600 hover:text-blue-800 dark:text-blue-400 underline"
+                      >
+                        Sign In or Create Account
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
+      </section>
+
+      {/* Generate Button Section */}
+      <section className="animate-fade-in" style={{ animationDelay: '0.4s' }}>
         <button
           onClick={handleSubmit}
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
-          disabled={isLoading}
+          disabled={isLoading || !topic.trim() || questions.length === 0}
+          className={`
+            w-full apple-button-primary text-body
+            ${isLoading ? 'opacity-60 cursor-not-allowed' : ''}
+            ${(!topic.trim() || questions.length === 0) ? 'opacity-40 cursor-not-allowed' : ''}
+          `}
+          aria-label={isLoading ? 'Generating responses' : 'Generate responses'}
         >
-          {isLoading ? 'Generating...' : 'Generate Responses'}
+          {isLoading ? (
+            <div className="flex items-center justify-center space-x-3">
+              <svg
+                className="animate-spin h-5 w-5"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
+              </svg>
+              <span>Generating Responses...</span>
+            </div>
+          ) : (
+            'Generate Responses'
+          )}
         </button>
-      </div>
+
+        {/* Progress indicator */}
+        {!topic.trim() || questions.length === 0 ? (
+          <div className="mt-3 text-center">
+            <p className="text-footnote" style={{ color: 'var(--color-secondary-label)' }}>
+              {!topic.trim() ? 'Enter a research topic to continue' : 'Add at least one question to generate responses'}
+            </p>
+          </div>
+        ) : (
+          <div className="mt-3 text-center">
+            <p className="text-footnote" style={{ color: 'var(--color-system-green)' }}>
+              Ready to generate {numResponses} response{numResponses !== 1 ? 's' : ''} for {questions.length} question{questions.length !== 1 ? 's' : ''}
+            </p>
+          </div>
+        )}
+      </section>
+
+      {/* Auth Modal */}
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+
+      {/* Project Manager Modal */}
+      <ProjectManager
+        isOpen={showProjectManager}
+        onClose={() => setShowProjectManager(false)}
+        onLoadProject={loadProject}
+        currentProject={{
+          topic,
+          questions,
+          projectId: currentProjectId
+        }}
+      />
     </div>
   )
 }
@@ -144,5 +560,5 @@ export default function ResponseGenerator() {
 export interface Question {
   text: string
   type: 'single' | 'multiple'
-  options: { text: string; percentage: number }[];
+  options: { text: string; percentage: number | string }[];
 }

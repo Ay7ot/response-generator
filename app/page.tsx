@@ -1,12 +1,54 @@
+'use client'
+
 import ResponseGenerator from '@/components/ResponseGenerator'
+import DarkModeToggle from '@/components/DarkModeToggle'
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gray-100 py-6 flex flex-col justify-center sm:py-12">
-      <div className="relative py-3 px-4 sm:px-6 lg:px-8 w-full max-w-4xl mx-auto">
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-light-blue-500 shadow-lg transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 rounded-3xl"></div>
-        <div className="relative px-4 py-10 bg-white shadow-lg rounded-3xl sm:p-20">
-          <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-8 text-center">Research Question Response Generator</h1>
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--color-system-grouped-background)' }}>
+      {/* Dark Mode Toggle */}
+      <DarkModeToggle />
+
+      {/* Apple-style navigation area */}
+      <div className="pt-12 pb-8">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center">
+            <h1 className="text-largeTitle font-semibold" style={{ color: 'var(--color-label)' }}>
+              Response Generator
+            </h1>
+            <p className="text-title3 mt-2" style={{ color: 'var(--color-secondary-label)' }}>
+              Generate synthetic survey responses for research
+            </p>
+          </div>
+
+          {/* Project Action Buttons */}
+          <div className="flex justify-center mt-6 space-x-4">
+            <button
+              onClick={() => {
+                // This will be handled by the ResponseGenerator component
+                const event = new CustomEvent('openProjectManager')
+                window.dispatchEvent(event)
+              }}
+              className="apple-button-secondary px-6 py-3 text-body font-medium"
+            >
+              📁 My Projects
+            </button>
+            <button
+              onClick={() => {
+                const event = new CustomEvent('startNewProject')
+                window.dispatchEvent(event)
+              }}
+              className="apple-button-primary px-6 py-3 text-body font-medium"
+            >
+              + New Project
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main content area with Apple-style spacing */}
+      <div className="max-w-4xl mx-auto px-6 pb-12">
+        <div className="animate-slide-in">
           <ResponseGenerator />
         </div>
       </div>
