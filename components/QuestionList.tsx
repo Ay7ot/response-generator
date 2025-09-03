@@ -14,7 +14,8 @@ export default function QuestionList({ questions, onRemoveQuestion, onEditQuesti
   const [currentSlide, setCurrentSlide] = useState(0)
 
   // Keyboard navigation
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleKeyDown = (_e: React.KeyboardEvent) => {
     // Let react-slick handle the keyboard navigation
     // This is just a placeholder for any custom keyboard handling
   }

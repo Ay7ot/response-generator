@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { doc, setDoc, collection, addDoc, updateDoc } from 'firebase/firestore';
+import { doc, collection, addDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 // Diagnostic function to check Firebase connectivity
 async function checkFirebaseConnection() {
     try {
         console.log('🔍 Checking Firebase connection...');
-        const testCollection = collection(db, 'research_projects');
         console.log('✅ Firebase connection OK');
         return true;
     } catch (error) {

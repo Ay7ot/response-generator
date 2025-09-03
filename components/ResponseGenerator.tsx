@@ -7,10 +7,9 @@ import QuestionForm from './QuestionForm'
 import QuestionList from './QuestionList'
 import AuthModal from './AuthModal'
 import ProjectManager from './ProjectManager'
-import FirebaseDebug from './FirebaseDebug'
 import { useAuth } from '@/hooks/useFirebase'
 import { db } from '@/lib/firebase'
-import { collection, addDoc, updateDoc, doc, getDoc } from 'firebase/firestore'
+import { collection, addDoc, updateDoc, doc } from 'firebase/firestore'
 
 export default function ResponseGenerator() {
   const [topic, setTopic] = useState('')
@@ -18,7 +17,7 @@ export default function ResponseGenerator() {
   const [numResponses, setNumResponses] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
-  const [focusedSection, setFocusedSection] = useState<string | null>(null)
+  const [, setFocusedSection] = useState<string | null>(null)
   const [generatedResponses, setGeneratedResponses] = useState<string[][]>([])
   const [saveToFirebase, setSaveToFirebase] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -26,14 +25,14 @@ export default function ResponseGenerator() {
   const [currentProjectId, setCurrentProjectId] = useState<string | undefined>()
   const topicInputRef = useRef<HTMLInputElement>(null)
 
-  const { user, loading: authLoading } = useAuth()
+  const { user } = useAuth()
 
   // Apple-style focus management
   useEffect(() => {
     if (topicInputRef.current && topic === '') {
       topicInputRef.current.focus()
     }
-  }, [])
+  }, [topic])
 
   // Listen for project management events
   useEffect(() => {
@@ -130,7 +129,12 @@ export default function ResponseGenerator() {
     }
   }
 
-  const loadProject = (project: any) => {
+  const loadProject = (project: {
+    id: string
+    topic?: string
+    questions?: Question[]
+    responses?: string[][]
+  }) => {
     setTopic(project.topic || '')
     setQuestions(project.questions || [])
     setCurrentProjectId(project.id)

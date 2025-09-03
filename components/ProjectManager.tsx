@@ -1,17 +1,17 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { toast } from 'react-toastify'
 import { db } from '@/lib/firebase'
-import { collection, query, where, orderBy, getDocs, addDoc, updateDoc, doc, getDoc } from 'firebase/firestore'
+import { collection, query, where, getDocs, addDoc, updateDoc, doc, getDoc } from 'firebase/firestore'
 import { useAuth } from '@/hooks/useFirebase'
 import { createPortal } from 'react-dom'
 
 interface Project {
     id: string
     topic: string
-    questions: any[]
-    responses: any[]
+    questions: Question[]
+    responses: string[][]
     createdAt: string
     updatedAt: string
     totalQuestions: number
@@ -20,13 +20,22 @@ interface Project {
     saveType: 'draft' | 'complete'
 }
 
+interface Question {
+    text: string
+    type: 'single' | 'multiple'
+    options: {
+        text: string
+        percentage: number | string
+    }[]
+}
+
 interface ProjectManagerProps {
     isOpen: boolean
     onClose: () => void
     onLoadProject: (project: Project) => void
     currentProject: {
         topic: string
-        questions: any[]
+        questions: Question[]
         projectId?: string
     }
 }
@@ -42,13 +51,7 @@ export default function ProjectManager({
     const [saving, setSaving] = useState(false)
     const { user } = useAuth()
 
-    useEffect(() => {
-        if (isOpen && user) {
-            loadProjects()
-        }
-    }, [isOpen, user])
-
-    const loadProjects = async () => {
+    const loadProjects = useCallback(async () => {
         if (!user) return
 
         setLoading(true)
@@ -59,7 +62,10 @@ export default function ProjectManager({
                 where('userId', '==', user.uid)
             )
             const snapshot = await getDocs(q)
-            const items: Project[] = snapshot.docs.map((d) => ({ id: d.id, ...(d.data() as any) }))
+            const items: Project[] = snapshot.docs.map((d) => ({
+                id: d.id,
+                ...d.data()
+            } as Project))
             items.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
             setProjects(items)
         } catch (error) {
@@ -68,7 +74,13 @@ export default function ProjectManager({
         } finally {
             setLoading(false)
         }
-    }
+    }, [user])
+
+    useEffect(() => {
+        if (isOpen && user) {
+            loadProjects()
+        }
+    }, [isOpen, user, loadProjects])
 
     const saveCurrentProject = async (saveType: 'draft' | 'complete' = 'draft') => {
         if (!user) {
@@ -124,9 +136,8 @@ export default function ProjectManager({
                 toast.error('Project not found')
                 return
             }
-            const project = { id: snap.id, ...(snap.data() as any) } as Project
+            const project = { id: snap.id, ...snap.data() } as Project
             onLoadProject(project)
-            toast.success('Project loaded successfully!')
             onClose()
         } catch (error) {
             console.error('Error loading project:', error)
@@ -239,13 +250,8 @@ export default function ProjectManager({
                                 {projects.map((project) => (
                                     <div
                                         key={project.id}
-                                        className="apple-card p-4 cursor-pointer transition-all duration-200"
+                                        className="apple-card p-4 cursor-pointer transition-all duration-200 hover:shadow-lg"
                                         onClick={() => loadProject(project.id)}
-                                        style={{
-                                            ':hover': {
-                                                boxShadow: 'var(--shadow-2)'
-                                            }
-                                        }}
                                     >
                                         <div className="flex items-start justify-between">
                                             <div className="flex-1">

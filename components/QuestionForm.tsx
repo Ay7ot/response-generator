@@ -10,11 +10,6 @@ interface QuestionFormProps {
   questions: Question[]
 }
 
-interface Option {
-  text: string
-  percentage: string // Always string in form, converted to number when saved
-}
-
 export default function QuestionForm({ onAddQuestion, onUpdateQuestion, editingIndex, questions }: QuestionFormProps) {
   const [questionText, setQuestionText] = useState('')
   const [questionType, setQuestionType] = useState<'single' | 'multiple'>('single')

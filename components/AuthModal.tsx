@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail } from 'firebase/auth'
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import { toast } from 'react-toastify'
 import { createPortal } from 'react-dom'
@@ -33,8 +33,12 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 await sendPasswordResetEmail(auth, email)
                 toast.success('Password reset email sent')
                 setIsReset(false)
-            } catch (error: any) {
-                toast.error(error.message || 'Failed to send reset email')
+            } catch (error) {
+                if (error instanceof Error) {
+                    toast.error(error.message || 'Failed to send reset email')
+                } else {
+                    toast.error('Failed to send reset email')
+                }
             } finally {
                 setResetting(false)
             }
@@ -54,20 +58,14 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             onClose()
             setEmail('')
             setPassword('')
-        } catch (error: any) {
-            toast.error(error.message || 'Authentication failed')
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message || 'Authentication failed')
+            } else {
+                toast.error('Authentication failed')
+            }
         } finally {
             setLoading(false)
-        }
-    }
-
-    const handleSignOut = async () => {
-        try {
-            await signOut(auth)
-            toast.success('Signed out successfully')
-            onClose()
-        } catch (error: any) {
-            toast.error('Sign out failed')
         }
     }
 
