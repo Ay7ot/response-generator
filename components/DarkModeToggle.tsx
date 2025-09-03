@@ -105,7 +105,7 @@ export default function DarkModeToggle() {
                             </div>
                             <button
                                 onClick={handleSignOut}
-                                className="mt-2 w-full text-left text-sm apple-button-secondary text-center"
+                                className="mt-2 w-full text-sm apple-button-secondary text-center"
                                 style={{
                                     backgroundColor: 'var(--color-system-red)',
                                     color: 'white',
