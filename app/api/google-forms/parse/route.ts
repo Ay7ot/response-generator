@@ -39,12 +39,12 @@ export async function POST(request: NextRequest) {
         const rawData = scriptMatch[1]
         const data = JSON.parse(rawData)
 
-            const questions = data[1][1]
-    const parsed: Record<string, {
-      id: string
-      type: number
-      options: string[]
-    }> = {}
+        const questions = data[1][1]
+        const parsed: Record<string, {
+            id: string
+            type: number
+            options: string[]
+        }> = {}
 
         for (const q of questions) {
             if (!q || !Array.isArray(q)) continue

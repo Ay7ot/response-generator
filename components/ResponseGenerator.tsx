@@ -362,7 +362,7 @@ export default function ResponseGenerator() {
 
       {/* Mode Selection Tabs */}
       <section className="apple-card p-6 animate-fade-in" style={{ animationDelay: '0.05s' }}>
-        <div className="flex space-x-1 mb-4">
+        <div className="flex flex-col md:flex-row gap-3 md:gap-1 mb-4">
           <button
             onClick={() => setActiveTab('synthetic')}
             className={`flex-1 py-3 px-4 text-body font-medium rounded-lg transition-all ${activeTab === 'synthetic'
