@@ -53,7 +53,7 @@ export default function GoogleFormsConnector({ onDataImported }: GoogleFormsConn
         }
     }
 
-    const handleConfigChange = (questionText: string, newValue: any) => {
+    const handleConfigChange = (questionText: string, newValue: { [key: string]: number } | string) => {
         if (!responseConfig) return
 
         const newConfig = { ...responseConfig }

@@ -366,8 +366,8 @@ export default function ResponseGenerator() {
           <button
             onClick={() => setActiveTab('synthetic')}
             className={`flex-1 py-3 px-4 text-body font-medium rounded-lg transition-all ${activeTab === 'synthetic'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
           >
             📊 Synthetic Data Generation
@@ -375,8 +375,8 @@ export default function ResponseGenerator() {
           <button
             onClick={() => setActiveTab('google-forms')}
             className={`flex-1 py-3 px-4 text-body font-medium rounded-lg transition-all ${activeTab === 'google-forms'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
           >
             📝 Google Forms Connector

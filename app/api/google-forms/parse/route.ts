@@ -39,8 +39,12 @@ export async function POST(request: NextRequest) {
         const rawData = scriptMatch[1]
         const data = JSON.parse(rawData)
 
-        const questions = data[1][1]
-        const parsed: Record<string, any> = {}
+            const questions = data[1][1]
+    const parsed: Record<string, {
+      id: string
+      type: number
+      options: string[]
+    }> = {}
 
         for (const q of questions) {
             if (!q || !Array.isArray(q)) continue
@@ -59,8 +63,8 @@ export async function POST(request: NextRequest) {
                     // Extract options if present
                     if (answers_block[0].length > 1 && answers_block[0][1]) {
                         options = answers_block[0][1]
-                            .filter((opt: any) => opt && opt[0])
-                            .map((opt: any) => opt[0])
+                            .filter((opt: unknown[]): opt is [string, ...unknown[]] => Array.isArray(opt) && opt.length > 0 && typeof opt[0] === 'string')
+                            .map((opt: [string, ...unknown[]]) => opt[0])
                     }
                 }
 
